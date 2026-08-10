@@ -42,7 +42,9 @@ STATUSES = LIVE + CLOSED
 DEFAULTS = {
     "stale_days": 21,
     "scope_label": "scope",
-    "skip_dirs": [".git", ".claude", "node_modules", "__pycache__"],
+    # `templates` is skipped because template files carry placeholder frontmatter
+    # (`<YYYY-MM-DD>`) that is not meant to validate. Configurable, like the rest.
+    "skip_dirs": [".git", ".claude", "node_modules", "__pycache__", "templates"],
 }
 
 SKIP_FILES = {"INDEX.md"}

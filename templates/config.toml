@@ -1,0 +1,25 @@
+# agent-workspace configuration.
+#
+# Every key is optional. An absent config.toml means defaults throughout, so a workspace
+# created by hand still validates.
+
+spec_version  = "1.0"
+
+# The workspace directory name. Recorded for tooling and documentation; build-index.py
+# derives the root from its own location and does not read this.
+workspace_dir = "__WORKSPACE_DIR__"
+
+# "multi-repo" (project root is not a repo, code in siblings) or "monorepo" (root is a repo).
+layout        = "__LAYOUT__"
+
+# Days after which a `status: active` file fails --check. Raise it if your cadence is slower;
+# do not raise it to stop the check complaining about something you should have reclassified.
+stale_days    = 21
+
+# Column heading for the `scope:` field in INDEX.md. "repos" reads better in a multi-repo
+# workspace, "packages" in a monorepo. Cosmetic.
+scope_label   = "__SCOPE_LABEL__"
+
+# Directories never walked. `templates` is here because template files carry placeholder
+# frontmatter that is not meant to validate.
+skip_dirs     = [".git", ".claude", "node_modules", "__pycache__", "templates"]
