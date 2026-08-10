@@ -2,6 +2,10 @@ __pycache__/
 *.pyc
 .DS_Store
 
+# Personal editor config, not part of the deliverable.
+.vscode/
+.idea/
+
 # Agent tooling state. The adapters/ directory ships agent guidance as content;
 # this ignores a local agent's own scratch state if one runs in here.
 .claude/
