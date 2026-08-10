@@ -353,3 +353,56 @@ Any `needs-triage` file MUST fail (section 5.3).
 The generator MUST write `INDEX.md` listing every non-archived file grouped by status, and MUST
 mark the file as generated. Archived files SHOULD be summarised by count rather than listed, so
 the index stays readable as the archive grows.
+
+---
+
+## 8. Adapters (informative)
+
+Sections 1 to 7 describe a structure. A structure holds only if whoever writes into it knows the
+rules, and on an agent-assisted project that is mostly the agent. This section maps the spec onto
+specific tooling. Nothing here is normative; a workspace conforms without any of it.
+
+Ready-to-paste blocks are in [`adapters/`](adapters/).
+
+### 8.1 What to install, in priority order
+
+If you install only one thing, install rule 6.1: **the tracker is updated in the same turn as the
+work it tracks.** It is the rule that fails most often and the one whose failure is hardest to
+detect by reading, because a stale tracker looks exactly like a current one.
+
+Then, in order of value:
+
+1. The four types and the checkbox test (section 2.1) - without this, everything becomes a plan
+2. The frontmatter requirement (section 4) - without it nothing else can be checked
+3. "Never write a plan into a code repository" (rule 6.3)
+4. A parking prompt at stopping points (F4)
+
+### 8.2 Claude Code
+
+`adapters/claude-code/` provides a `CLAUDE.md` block and a `/park` skill.
+
+Place the guidance in the `CLAUDE.md` highest in scope for the project. In a multi-repo layout
+that is the workspace root rather than any product repo: rule 6.3 has to be visible from every
+repo, and guidance living inside one repo is not read while working in another.
+
+Agent harnesses commonly write plans to a harness-managed directory with generated filenames.
+Those files are unfindable weeks later and violate rule 6.4. Guidance SHOULD instruct the agent to
+copy such a plan into the workspace under a content-based name as its final step.
+
+### 8.3 Codex and other AGENTS.md tools
+
+`adapters/codex/` provides an `AGENTS.md` block carrying the same content. `AGENTS.md` at the
+project root is read by a growing number of tools, so this is the most portable adapter.
+
+### 8.4 Cursor
+
+`adapters/cursor/` provides a `.cursorrules` block, compressed to the enforceable rules by that
+format's convention. The reasoning stays here in the spec.
+
+### 8.5 Automation
+
+Regeneration can be automated with a session-stop hook, a git hook in the workspace repository, or
+a CI job. Any such automation SHOULD ignore the exit status when it runs implicitly: a validation
+failure ought to surface when someone runs `--check` deliberately, not by making an unrelated
+action appear to fail. An automation that cries wolf gets disabled, and then nothing is checked at
+all.
