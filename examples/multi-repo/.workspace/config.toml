@@ -1,0 +1,14 @@
+spec_version  = "1.0"
+workspace_dir = ".workspace"
+layout        = "multi-repo"
+scope_label   = "repos"
+
+# Deliberately enormous, and only in the examples.
+#
+# A committed example cannot stay fresh: its `updated:` dates are frozen the day they are
+# written, so the staleness check in SPEC 7.2 would fail this tree for everyone who cloned it
+# a month later. Disabling the check here keeps the example runnable without teaching anyone
+# to disable it in a real workspace, where 21 days is the point.
+stale_days    = 36500
+
+skip_dirs     = [".git", ".claude", "node_modules", "__pycache__", "templates"]

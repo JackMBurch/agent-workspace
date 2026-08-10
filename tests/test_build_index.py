@@ -272,5 +272,50 @@ class TestDirectoryNameAgnostic(WorkspaceCase):
         self.assertEqual(code, 0, out)
 
 
+class TestShippedExamples(unittest.TestCase):
+    """The examples in examples/ must validate under the rules they illustrate.
+
+    Without this they rot silently: an example that fails --check teaches the wrong thing to
+    everybody who copies it.
+    """
+
+    def check_example(self, name):
+        src = os.path.join(REPO, "examples", name, ".workspace")
+        self.assertTrue(os.path.isdir(src), f"missing example: {name}")
+        root = tempfile.mkdtemp(prefix=f"aw-example-{name}-")
+        self.addCleanup(shutil.rmtree, root, ignore_errors=True)
+        dest = os.path.join(root, ".workspace")
+        shutil.copytree(src, dest)
+        os.makedirs(os.path.join(dest, "bin"), exist_ok=True)
+        shutil.copy(SCRIPT, os.path.join(dest, "bin", "build-index.py"))
+        proc = subprocess.run(
+            [sys.executable, os.path.join(dest, "bin", "build-index.py"), "--check"],
+            capture_output=True, text=True)
+        self.assertEqual(proc.returncode, 0,
+                         f"example {name} does not validate:\n{proc.stdout}{proc.stderr}")
+        return dest
+
+    def test_multi_repo_example_validates(self):
+        self.check_example("multi-repo")
+
+    def test_monorepo_example_validates(self):
+        self.check_example("monorepo")
+
+    def test_multi_repo_example_demonstrates_the_tracker_check(self):
+        # The README tells the reader to break it this way. If that stopped failing, the
+        # example's headline lesson would be wrong.
+        dest = self.check_example("multi-repo")
+        tracker = os.path.join(dest, "trackers", "checkout-v2.md")
+        with open(tracker, encoding="utf-8") as fh:
+            text = fh.read()
+        with open(tracker, "w", encoding="utf-8") as fh:
+            fh.write(text.replace("updated: 2026-08-10", "updated: 2026-08-01", 1))
+        proc = subprocess.run(
+            [sys.executable, os.path.join(dest, "bin", "build-index.py"), "--check"],
+            capture_output=True, text=True)
+        self.assertEqual(proc.returncode, 1)
+        self.assertIn("went stale when the child moved", proc.stdout + proc.stderr)
+
+
 if __name__ == "__main__":
     unittest.main()

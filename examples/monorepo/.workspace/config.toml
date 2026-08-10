@@ -1,0 +1,13 @@
+spec_version  = "1.0"
+workspace_dir = ".workspace"
+layout        = "monorepo"
+
+# "packages" rather than "repos": in a monorepo there is one repository, so the useful axis
+# for `scope:` is which package or app a file concerns.
+scope_label   = "packages"
+
+# See examples/multi-repo/.workspace/config.toml for why this is enormous here and must not be
+# copied into a real workspace.
+stale_days    = 36500
+
+skip_dirs     = [".git", ".claude", "node_modules", "__pycache__", "templates"]
