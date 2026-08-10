@@ -111,6 +111,12 @@ it tracks.** A tracker that lags is worse than no tracker, because it is believe
 - **[SPEC.md](SPEC.md)** - the normative spec. Read this if you are implementing or extending.
 - **[examples/](examples/)** - worked examples for both layouts. Fictional projects.
 
+This repo uses its own spec: bootstrap has been run against it, so a `.workspace/` exists here
+holding this project's own tracker and plan. You will not find it in the file listing, because
+the monorepo rule excludes it via `.git/info/exclude` and it is never pushed. That is the spec
+working as designed rather than an omission - and it is why `examples/` exists as the public
+demonstration.
+
 ## Backup and privacy
 
 Bootstrap runs `git init` and adds **no remote**, deliberately. Local history gives you the undo
