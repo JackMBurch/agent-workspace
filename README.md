@@ -80,6 +80,16 @@ can never be mistaken for a decision.
 The tooling is **copied into your project**, not linked. Once bootstrapped, your project has no
 dependency on this repo.
 
+If you work with Claude Code, do the whole setup in one command instead - scaffold, `/park`
+skill and agent guidance together:
+
+```
+/path/to/agent-workspace/adapters/claude-code/setup.sh /path/to/your/project
+```
+
+See [`adapters/claude-code/`](adapters/claude-code/) for what that installs and how to get a
+global `/setup-workspace` skill for future repos.
+
 ## Using it
 
 ```
@@ -99,7 +109,7 @@ The structure only holds if agents follow it. `adapters/` has paste-ready blocks
 
 | Tool | File |
 |---|---|
-| Claude Code | [`adapters/claude-code/`](adapters/claude-code/) - guidance block plus a `/park` skill |
+| Claude Code | [`adapters/claude-code/`](adapters/claude-code/) - guidance block, a `/park` skill, and a `setup.sh` that installs both |
 | Codex and generic | [`adapters/codex/`](adapters/codex/) - `AGENTS.md` block |
 | Cursor | [`adapters/cursor/`](adapters/cursor/) - `.cursorrules` block |
 
