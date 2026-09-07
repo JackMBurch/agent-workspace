@@ -9,3 +9,7 @@ __pycache__/
 # Agent tooling state. The adapters/ directory ships agent guidance as content;
 # this ignores a local agent's own scratch state if one runs in here.
 .claude/
+.gstack/
+
+# One-shot local scripts. Read before running; deleted when done.
+scratch/
