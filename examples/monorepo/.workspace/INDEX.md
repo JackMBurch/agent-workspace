@@ -2,21 +2,35 @@
 
 # Workspace index
 
-_Generated 2026-08-10 - 2 live, 0 reference, 0 archived._
+_Generated 2026-08-10 - 3 live, 1 reference, 0 archived._
 
-## active (1)
+## active (2)
 
-| File | Type | Epic | Packages | Updated | Note |
-|---|---|---|---|---|---|
-| [`search-relevance.md`](trackers/search-relevance.md) | tracker | search-relevance | packages/search-core, apps/web | 2026-08-10 |  |
+| File | Workspace | Type | Epic | Packages | Updated | Note |
+|---|---|---|---|---|---|---|
+| [`checkout-ui.md`](apps/web/trackers/checkout-ui.md) | apps/web | tracker | checkout-ui | apps/web | 2026-08-10 |  |
+| [`search-relevance.md`](trackers/search-relevance.md) | root | tracker | search-relevance | packages/search-core, apps/web | 2026-08-10 |  |
 
 ## paused (1)
 
-| File | Type | Epic | Packages | Updated | Note |
-|---|---|---|---|---|---|
-| [`s1-semantic-reranking.md`](plans/search-relevance/s1-semantic-reranking.md) | plan | search-relevance | packages/search-core | 2026-08-10 |  |
+| File | Workspace | Type | Epic | Packages | Updated | Note |
+|---|---|---|---|---|---|---|
+| [`s1-semantic-reranking.md`](plans/search-relevance/s1-semantic-reranking.md) | root | plan | search-relevance | packages/search-core | 2026-08-10 |  |
+
+## reference (1)
+
+Closed material kept live because it is read, not worked: docs and investigations.
+
+| File | Workspace | Type | Epic | Packages | Updated | Note |
+|---|---|---|---|---|---|---|
+| [`README.md`](apps/web/README.md) | apps/web | doc | - | - | 2026-08-10 |  |
+
+## sub-workspaces (1)
+
+Each has its own index over just its files. Epics are shared across all of them.
+
+- [`apps/web/`](apps/web/INDEX.md) - 1 live
 
 ## archive (0)
 
 _Nothing archived yet._
-

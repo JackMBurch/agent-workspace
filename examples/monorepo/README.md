@@ -7,7 +7,9 @@ nested repository inside it.
 shop-monorepo/          (git repo)
   packages/search-core/
   apps/web/
+    .workspace -> ../../.workspace/apps/web   (symlink, excluded; bootstrap --sub makes it)
   .workspace/           (git repo, nested)  <- this example
+    apps/web/           sub-workspace: apps/web's own trackers, own INDEX.md
 ```
 
 ## The only real difference
@@ -42,6 +44,7 @@ Bootstrap creates it, and you can verify it worked: with the workspace in place,
 |---|---|
 | `trackers/search-relevance.md` | An epic tracker scoped to packages rather than repos |
 | `plans/search-relevance/s1-semantic-reranking.md` | `paused`, and why that is not `blocked` - the decision belongs to the team, so nobody external is holding it |
+| `apps/web/trackers/checkout-ui.md` | A **sub-workspace** (SPEC 3.6): work scoped to one app keeps its trackers at that app's path inside the one workspace, with its own `apps/web/INDEX.md`. The root `INDEX.md` lists it too, with a Workspace column. Created by `bootstrap.sh --sub apps/web`, which also links `apps/web/.workspace` to it - a symlink this example cannot ship, since it would point outside the example |
 
 ## Try it
 

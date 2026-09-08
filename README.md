@@ -37,6 +37,8 @@ Notes directories fail the same way everywhere:
   sessions/                  parked session handoffs
   docs/
     investigations/          frozen findings that are not work items
+  <sub-project path>/        optional sub-workspace: the same four directories, scoped to
+                             one sub-project, with its own INDEX.md
 ```
 
 Every markdown file starts with frontmatter:
@@ -79,6 +81,20 @@ can never be mistaken for a decision.
 
 The tooling is **copied into your project**, not linked. Once bootstrapped, your project has no
 dependency on this repo.
+
+A project with distinct sub-projects - servers in a homelab repo, services in a monorepo - can
+give each one a **sub-workspace**: a slice of the same workspace, at the same relative path,
+with its own trackers, sessions and docs and its own `INDEX.md`:
+
+```
+/path/to/agent-workspace/bootstrap.sh --sub servers/jellyfin
+```
+
+That creates `.workspace/servers/jellyfin/`, links `servers/jellyfin/.workspace` to it so the
+usual relative paths work from inside the sub-project, registers it in `config.toml`, and
+excludes the link. Epics are shared across the whole tree, so a plan in the sub-workspace can
+hang off a tracker at the root; the root `INDEX.md` lists everything and says where each file
+lives. One workspace repository, not one per sub-project. Spec section 3.6.
 
 If you work with Claude Code, do the whole setup in one command instead - scaffold, `/park`
 skill and agent guidance together:

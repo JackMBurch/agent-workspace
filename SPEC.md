@@ -1,6 +1,6 @@
 # agent-workspace specification
 
-**Version 1.0**
+**Version 1.1**
 
 The key words MUST, MUST NOT, SHOULD, SHOULD NOT and MAY are to be interpreted as described in
 RFC 2119.
@@ -175,6 +175,65 @@ summaries of private conversations. None of it is a credential, and collectively
 picture of a business. Publishing it is a decision with a different risk profile from keeping a
 local history, and the two MUST NOT be bundled into one action.
 
+### 3.6 Sub-workspaces
+
+A workspace MAY contain **sub-workspaces**: directories inside `$WORKSPACE_DIR` that carry
+their own `plans/`, `trackers/`, `sessions/` and `docs/` for work scoped to one sub-project
+of the code tree. The rest of the workspace is then the **root**, for work that spans the
+project.
+
+```
+monorepo/                        (git repo)
+  lib/
+  servers/jellyfin/
+    .workspace -> ../../.workspace/servers/jellyfin      (symlink, excluded)
+  .workspace/                    (git repo, nested)
+    INDEX.md                     everything, with a column saying where each file lives
+    config.toml                  subworkspaces = ["servers/jellyfin"]
+    bin/  templates/
+    plans/  trackers/  sessions/  docs/                  root-scoped work
+    servers/jellyfin/
+      INDEX.md                   generated; this sub-workspace only
+      plans/  trackers/  sessions/  docs/                work scoped to servers/jellyfin
+      bin -> ../../bin           (symlink, optional)
+      templates -> ../../templates
+```
+
+The rules, and the reason each is a rule:
+
+1. **A sub-workspace's path MUST equal the sub-project's path relative to the project
+   root.** `servers/jellyfin/` in the code tree is `$WORKSPACE_DIR/servers/jellyfin/` in the
+   workspace. Mirroring removes a naming decision and makes the `scope:` value and the
+   sub-workspace path the same string.
+2. **Sub-workspaces MUST be declared** in `config.toml` under `subworkspaces`. Discovery by
+   shape would mistake `plans/<epic>/` for one. A declared path that does not exist MUST be
+   a validation error.
+3. **There is one repository.** A sub-workspace MUST NOT be its own git repository; it is a
+   directory of the root workspace repo. Two repositories would reintroduce the problem
+   section 3.2 solves: a file that belongs to both has no home in either.
+4. **`epic:` is global.** A tracker at the root may own plans in a sub-workspace, and the
+   reverse. The validator MUST resolve epics across the whole tree, and MUST fail on two
+   live trackers for one epic wherever they live (section 7.3).
+5. **Each sub-workspace gets its own generated `INDEX.md`** covering only its files, with
+   links relative to it and a link to the root index. The root index MUST still list every
+   file and SHOULD say which sub-workspace each belongs to (section 7.6).
+6. **Implementations SHOULD link `<sub-project>/$WORKSPACE_DIR` to the sub-workspace**, so
+   the same relative paths (`$WORKSPACE_DIR/trackers/`) mean the right thing whether the
+   working directory is the project root or the sub-project. That link sits inside a code
+   repository and MUST be excluded exactly as in section 3.4. Note the pattern has **no
+   trailing slash**: to git a symlink is a file, and a directory-only pattern does not match
+   it. In a multi-repo layout the sub-project is a sibling repository and the exclusion goes
+   in that repository.
+7. **`bin/` and `templates/` MAY be linked into a sub-workspace** rather than copied. The
+   validator MUST resolve symlinks when deriving its root, so that running it through such a
+   link still validates and indexes the whole tree rather than the slice.
+
+What goes where is the only judgement left: a file about one sub-project alone goes in its
+sub-workspace; a file about shared tooling or more than one sub-project goes at the root.
+Adapters SHOULD state that rule in the sub-project's own agent guidance, because an agent
+started inside the sub-project sees a `$WORKSPACE_DIR/` there and will otherwise file
+project-wide work in it.
+
 ## 4. Frontmatter
 
 Every `.md` file under `$WORKSPACE_DIR` MUST begin with a YAML frontmatter block delimited by
@@ -337,6 +396,9 @@ For each epic, if a tracker exists and any live plan under that epic has a **mor
 This is the check for F2, and it is the reason the tracker type exists separately at all. It
 catches the exact moment a parent goes stale: a child moved, and the summary above it did not.
 
+Epics are resolved across the root and every sub-workspace (section 3.6). Two live trackers
+claiming the same epic MUST fail: they are two answers to one question.
+
 Additionally, an epic with live files but no tracker SHOULD be reported.
 
 ### 7.4 Archive correspondence
@@ -353,6 +415,10 @@ Any `needs-triage` file MUST fail (section 5.3).
 The generator MUST write `INDEX.md` listing every non-archived file grouped by status, and MUST
 mark the file as generated. Archived files SHOULD be summarised by count rather than listed, so
 the index stays readable as the archive grows.
+
+With sub-workspaces declared (section 3.6), the generator MUST also write an `INDEX.md` inside
+each one, covering only that sub-workspace's files, and the root index SHOULD name the
+sub-workspace each file lives in and link to each sub-workspace's index.
 
 ---
 
