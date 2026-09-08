@@ -44,6 +44,10 @@ plan. To find out where something is up to, read the tracker, not the plans.
   saved while being effectively discarded.
 - **Update rather than duplicate.** If a file for this work already exists, edit it and bump
   `updated:` and `status:` instead of writing a second one.
+- **If `config.toml` lists `subworkspaces`**, a file about one of those sub-projects alone goes
+  in its sub-workspace (`<WORKSPACE_DIR>/<sub-project path>/trackers/` and so on); a file about
+  shared tooling or more than one sub-project goes at the root. `epic:` is shared across all
+  of them, and each sub-workspace has its own `INDEX.md`.
 
 Done and abandoned work moves to an `archive/` directory rather than being deleted. Abandoned
 plans keep `status: abandoned` and one line on why: a dead plan that *looks* live is an

@@ -21,6 +21,11 @@
 #   setup.sh ../my-app --dir .notes
 #   setup.sh ../my-app --adopt ./docs/notes
 #   setup.sh ../my-app --ignore-mode gitignore
+#   setup.sh ../my-app --sub services/api      # add a sub-workspace for services/api
+#
+# --sub also appends the sub-workspace guidance block to the sub-project's CLAUDE.md, so
+# an agent working inside that directory knows which files belong there and which belong
+# at the root. Run it once per sub-project; everything else is skipped when already done.
 #
 # Requires: git, python3. Nothing else.
 
@@ -29,11 +34,12 @@ set -euo pipefail
 SRC="$(cd "$(dirname "${BASH_SOURCE[0]}")/../.." && pwd)"
 
 usage() {
-  sed -n '3,25p' "${BASH_SOURCE[0]}" | sed 's|^# \{0,1\}||'
+  sed -n '3,30p' "${BASH_SOURCE[0]}" | sed 's|^# \{0,1\}||'
 }
 
 TARGET=""
 DIR=".workspace"
+SUB=""
 BOOTSTRAP_ARGS=()
 
 while [ $# -gt 0 ]; do
@@ -42,6 +48,10 @@ while [ $# -gt 0 ]; do
     # --dir is both passed through and read here, because the placeholder substitution
     # in steps 2 and 3 has to use the same name bootstrap was given.
     --dir)     DIR="$2"; BOOTSTRAP_ARGS+=("$1" "$2"); shift 2 ;;
+    --sub)     SUB="${2%/}"; SUB="${SUB#./}"; BOOTSTRAP_ARGS+=("$1" "$2"); shift 2 ;;
+    --*=*)     BOOTSTRAP_ARGS+=("$1"); shift ;;
+    # Every other option takes a value; keep it with its flag.
+    --layout|--ignore-mode|--adopt) BOOTSTRAP_ARGS+=("$1" "$2"); shift 2 ;;
     -*)        BOOTSTRAP_ARGS+=("$1"); shift ;;
     *)
       if [ -z "$TARGET" ]; then TARGET="$1"; else BOOTSTRAP_ARGS+=("$1"); fi
@@ -111,6 +121,35 @@ else
   echo "appended guidance block to ${GUIDE#"$TARGET"/}"
 fi
 
+# ---------------------------------------------------------------- 4. sub-workspace guidance
+
+# The root block says where files go in general; this one, in the sub-project's own
+# CLAUDE.md, says which of those places is *here*. Without it an agent started inside the
+# sub-project sees a `.workspace/` and files everything there, including project-wide work.
+if [ -n "$SUB" ]; then
+  if [ -f "$TARGET/$SUB/.claude/CLAUDE.md" ]; then
+    SUB_GUIDE="$TARGET/$SUB/.claude/CLAUDE.md"
+  else
+    SUB_GUIDE="$TARGET/$SUB/CLAUDE.md"
+  fi
+  UP="$(printf '%s\n' "$SUB" | awk -F/ '{ for (i = 1; i <= NF; i++) printf "../" }')"
+  if grep -q "^## Knowledge base: this directory's sub-workspace" "$SUB_GUIDE" 2>/dev/null; then
+    echo "sub-workspace guidance already present in ${SUB_GUIDE#"$TARGET"/}, left alone"
+  else
+    {
+      [ -s "$SUB_GUIDE" ] && printf '\n'
+      sed -n '/^## Knowledge base/,$p' "$SRC/adapters/claude-code/CLAUDE-sub-block.md" \
+        | sed -e "s|<WORKSPACE_DIR>|$DIR|g" -e "s|<SUB_PATH>|$SUB|g" -e "s|<UP>|$UP|g"
+    } >> "$SUB_GUIDE"
+    echo "appended sub-workspace guidance to ${SUB_GUIDE#"$TARGET"/}"
+  fi
+fi
+
 echo
-echo "done. next: write a tracker for the epic you are starting"
-echo "  cp $DIR/templates/tracker.md $DIR/trackers/<epic>.md"
+if [ -n "$SUB" ]; then
+  echo "done. next: write a tracker for the epic $SUB is on"
+  echo "  cp $DIR/templates/tracker.md $DIR/$SUB/trackers/<epic>.md"
+else
+  echo "done. next: write a tracker for the epic you are starting"
+  echo "  cp $DIR/templates/tracker.md $DIR/trackers/<epic>.md"
+fi

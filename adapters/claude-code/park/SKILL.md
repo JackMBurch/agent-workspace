@@ -54,6 +54,12 @@ Path: `<WORKSPACE_DIR>/sessions/<YYYY-MM-DD>-<slug>.md`, where `<slug>` names th
 (`checkout-payment-intents`, not `session-3`). Start from
 `<WORKSPACE_DIR>/templates/session.md`.
 
+If `config.toml` lists `subworkspaces` and the parked work belongs to one of those
+sub-projects alone, write it under that sub-workspace instead:
+`<WORKSPACE_DIR>/<sub-project path>/sessions/`. From inside the sub-project the plain
+`<WORKSPACE_DIR>/sessions/` path already resolves there through the symlink, so the only case
+that needs care is parking sub-project work from the project root.
+
 The two sections that carry the value:
 
 - **The exact next step.** One concrete action - the actual next command, file or decision.
