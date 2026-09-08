@@ -176,7 +176,7 @@ class TestTrackerFreshness(WorkspaceCase):
     def test_live_epic_with_no_tracker_is_reported(self):
         files = {"plans/checkout-v2/c0-payment-intents.md": fm(
             "plan", "active", TODAY, epic="checkout-v2")}
-        self.assertFails(files, "no tracker in trackers/")
+        self.assertFails(files, "no tracker anywhere in the workspace")
 
 
 class TestArchiveCorrespondence(WorkspaceCase):
@@ -270,6 +270,111 @@ class TestDirectoryNameAgnostic(WorkspaceCase):
         self.assertNotIn(".workspace", root)
         code, out = self.run_check(root)
         self.assertEqual(code, 0, out)
+
+
+
+SUB_CONFIG = 'subworkspaces = ["servers/jellyfin"]\n'
+
+
+class TestSubWorkspaces(WorkspaceCase):
+    """SPEC 3.6 - one workspace, sub-workspaces mirroring sub-project paths."""
+
+    def run_build(self, root):
+        proc = subprocess.run(
+            [sys.executable, os.path.join(root, "bin", "build-index.py"), "--today", TODAY],
+            capture_output=True, text=True)
+        self.assertEqual(proc.returncode, 0, proc.stdout + proc.stderr)
+        return proc.stdout
+
+    def test_epic_resolves_across_the_boundary(self):
+        # A plan in the sub-workspace hangs off a tracker at the root: no "no tracker" error,
+        # and the freshness check still sees the pair.
+        files = {
+            "trackers/storage.md": fm("tracker", "active", TODAY, epic="storage"),
+            "servers/jellyfin/plans/storage/w4.md": fm(
+                "plan", "active", TODAY, epic="storage"),
+        }
+        self.assertClean(files, SUB_CONFIG)
+        stale = dict(files, **{
+            "trackers/storage.md": fm("tracker", "active", "2026-08-01", epic="storage")})
+        self.assertFails(stale, "went stale when the child moved", SUB_CONFIG)
+
+    def test_two_live_trackers_for_one_epic_is_refused(self):
+        files = {
+            "trackers/storage.md": fm("tracker", "active", TODAY, epic="storage"),
+            "servers/jellyfin/trackers/storage.md": fm(
+                "tracker", "active", TODAY, epic="storage"),
+        }
+        self.assertFails(files, "second live tracker for epic `storage`", SUB_CONFIG)
+
+    def test_declared_but_missing_sub_workspace_fails(self):
+        self.assertFails(VALID, "declares sub-workspace `servers/jellyfin`", SUB_CONFIG)
+
+    def test_undeclared_nesting_is_just_a_path(self):
+        # Without a declaration nothing changes: nested files are plain workspace files and
+        # no sub-index is written. This is what keeps `plans/<epic>/` from being a sub.
+        files = dict(VALID, **{
+            "servers/jellyfin/trackers/x.md": fm("tracker", "active", TODAY, epic="x")})
+        root = self.build(files)
+        self.run_build(root)
+        self.assertFalse(os.path.exists(
+            os.path.join(root, "servers", "jellyfin", "INDEX.md")))
+
+    def test_sub_index_is_written_relative_and_linked_up(self):
+        files = dict(VALID, **{
+            "servers/jellyfin/trackers/subtitles.md": fm(
+                "tracker", "active", TODAY, epic="subtitles"),
+            "servers/jellyfin/sessions/archive/old.md": fm(
+                "session", "done", "2026-08-01", epic="subtitles"),
+        })
+        root = self.build(files, SUB_CONFIG)
+        out = self.run_build(root)
+        self.assertIn("wrote servers/jellyfin/INDEX.md", out)
+        with open(os.path.join(root, "servers", "jellyfin", "INDEX.md"),
+                  encoding="utf-8") as fh:
+            sub = fh.read()
+        # Only this sub-workspace's files, linked relative to it, plus a pointer to the root.
+        self.assertIn("(trackers/subtitles.md)", sub)
+        self.assertNotIn("c0-payment-intents.md", sub)
+        self.assertIn("(../../INDEX.md)", sub)
+        self.assertIn("`sessions/archive/` - 1 files", sub)
+        with open(os.path.join(root, "INDEX.md"), encoding="utf-8") as fh:
+            top = fh.read()
+        # The root index still lists everything, now saying where each file lives.
+        self.assertIn("| Workspace |", top)
+        self.assertIn("(servers/jellyfin/trackers/subtitles.md) | servers/jellyfin |", top)
+        self.assertIn("(trackers/checkout-v2.md) | root |", top)
+        self.assertIn("[`servers/jellyfin/`](servers/jellyfin/INDEX.md) - 1 live", top)
+        # And the generated sub-index does not fail the next --check against itself.
+        code, out = self.run_check(root)
+        self.assertEqual(code, 0, out)
+
+    def test_root_index_is_unchanged_without_sub_workspaces(self):
+        root = self.build(VALID)
+        self.run_build(root)
+        with open(os.path.join(root, "INDEX.md"), encoding="utf-8") as fh:
+            top = fh.read()
+        self.assertNotIn("Workspace |", top)
+        self.assertNotIn("sub-workspaces", top)
+
+    def test_runs_through_a_symlinked_bin(self):
+        # bootstrap links <sub>/bin -> ../../bin. Invoked through that link, the script must
+        # still find the real root and index the whole tree, not just the sub-workspace.
+        files = dict(VALID, **{
+            "servers/jellyfin/trackers/subtitles.md": fm(
+                "tracker", "active", TODAY, epic="subtitles")})
+        root = self.build(files, SUB_CONFIG)
+        os.symlink(os.path.join("..", "..", "bin"),
+                   os.path.join(root, "servers", "jellyfin", "bin"))
+        proc = subprocess.run(
+            [sys.executable, os.path.join(root, "servers", "jellyfin", "bin",
+                                          "build-index.py"), "--today", TODAY],
+            capture_output=True, text=True)
+        self.assertEqual(proc.returncode, 0, proc.stdout + proc.stderr)
+        self.assertIn("ok - 3 files", proc.stdout)
+        self.assertTrue(os.path.exists(os.path.join(root, "INDEX.md")))
+        self.assertTrue(os.path.exists(
+            os.path.join(root, "servers", "jellyfin", "INDEX.md")))
 
 
 class TestShippedExamples(unittest.TestCase):
