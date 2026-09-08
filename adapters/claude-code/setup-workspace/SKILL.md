@@ -18,7 +18,10 @@ silently, artifact types are mixed, and stopping points have nowhere to go.
 - Adopting an existing `notes/` or `docs/` folder into the structure
 
 **Not** for a repo that already has one. Check for a `.workspace/` (or the name in
-`config.toml`) first; if it exists, the job is to use it, not to re-run setup.
+`config.toml`) first; if it exists, the job is to use it, not to re-run setup. The one
+addition worth making to an existing workspace is a **sub-workspace** (step 3a), when asked
+for per-sub-project trackers, a workspace inside a subdirectory, or "one for the root and one
+for `<subdir>`".
 
 ## Steps
 
@@ -78,6 +81,29 @@ appended to the project's `CLAUDE.md`.
 Verify all three landed. A scaffold with no guidance block is the common half-install, and it
 fails quietly: the structure exists and nothing directs an agent to it, so notes keep landing
 at the repo root exactly as before.
+
+### 3a. Sub-workspaces, when a sub-project needs its own
+
+Do not create a second workspace inside the subdirectory. Two workspace repositories is the
+problem the spec exists to avoid (a file that belongs to both has a home in neither), and
+the spec's answer is one workspace with a **sub-workspace** at the sub-project's own path
+(SPEC 3.6):
+
+```
+<CLONE>/adapters/claude-code/setup.sh <TARGET_REPO> --sub <sub-project path>
+```
+
+That creates `<DIR>/<sub-project path>/{plans,trackers,sessions,docs}`, links
+`<sub-project path>/<DIR>` to it, registers it under `subworkspaces` in `config.toml`,
+excludes the link from git, and appends the sub-workspace guidance block to the
+sub-project's `CLAUDE.md`. Once per sub-project; re-running is safe.
+
+Then move the files that belong to the sub-project alone into it, with `git mv` inside the
+workspace repo, and fix any relative links that pointed out of the workspace (they gain the
+sub-workspace's depth: `../../servers/x` becomes `../../../../servers/x`). Files about shared
+tooling or more than one sub-project stay at the root. `epic:` values need no change - they
+are resolved across the whole tree - but `--check` refuses two live trackers for one epic,
+so a tracker moves rather than being copied.
 
 ### 4. If `--adopt` was used, triage
 

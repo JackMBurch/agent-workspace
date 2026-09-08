@@ -3,7 +3,7 @@
 # Every key is optional. An absent config.toml means defaults throughout, so a workspace
 # created by hand still validates.
 
-spec_version  = "1.0"
+spec_version  = "1.1"
 
 # The workspace directory name. Recorded for tooling and documentation; build-index.py
 # derives the root from its own location and does not read this.
@@ -19,6 +19,13 @@ stale_days    = 21
 # Column heading for the `scope:` field in INDEX.md. "repos" reads better in a multi-repo
 # workspace, "packages" in a monorepo. Cosmetic.
 scope_label   = "__SCOPE_LABEL__"
+
+# Sub-workspaces: paths relative to this directory, each mirroring the path of a sub-project
+# in the code tree (`servers/jellyfin`, `apps/web`). Each carries its own plans/, trackers/,
+# sessions/ and docs/ for work scoped to that sub-project, and gets its own INDEX.md. Epics
+# are shared with the root. Declared here rather than discovered, so that an epic directory
+# under plans/ is never mistaken for one. `bootstrap.sh --sub PATH` adds an entry.
+subworkspaces = []
 
 # Directories never walked. `templates` is here because template files carry placeholder
 # frontmatter that is not meant to validate.

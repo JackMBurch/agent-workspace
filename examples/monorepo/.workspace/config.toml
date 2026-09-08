@@ -10,4 +10,7 @@ scope_label   = "packages"
 # copied into a real workspace.
 stale_days    = 36500
 
+# apps/web keeps its own trackers, at the same path it has in the code tree (SPEC 3.6).
+subworkspaces = ["apps/web"]
+
 skip_dirs     = [".git", ".claude", "node_modules", "__pycache__", "templates"]

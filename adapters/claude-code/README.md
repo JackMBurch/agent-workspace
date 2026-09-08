@@ -17,6 +17,17 @@ passed through to `bootstrap.sh` (`--dir`, `--adopt`, `--ignore-mode`, `--layout
 It is idempotent: re-running refreshes the copied tooling and leaves everything already wired
 alone, so upgrading is just running it again.
 
+For a sub-project that should keep its own trackers (spec 3.6):
+
+```
+./adapters/claude-code/setup.sh /path/to/repo --sub servers/jellyfin
+```
+
+That runs `bootstrap.sh --sub`, then appends [`CLAUDE-sub-block.md`](CLAUDE-sub-block.md) to
+the sub-project's `CLAUDE.md`. The root block says where files go in general; the sub-block
+says which of those places is *here*, because an agent started inside the sub-project sees a
+`.workspace/` and would otherwise file project-wide work in it. Once per sub-project.
+
 **`git init` the target first** if it is meant to be a single repo. Layout detection asks
 whether the target is inside a git work tree, so a repo that has not been initialised yet
 detects as multi-repo, which is almost never what was meant. The script warns and asks before
