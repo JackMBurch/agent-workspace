@@ -86,8 +86,12 @@ fi
 
 # ---------------------------------------------------------------- 1. scaffold
 
+# bootstrap exits non-zero when the workspace has validation problems - a stale tracker,
+# a needs-triage file. That is content, not setup, and must not stop the skill and the
+# guidance from being (re)installed; the status is passed on at the end instead.
 cd "$TARGET"
-"$SRC/bootstrap.sh" "${BOOTSTRAP_ARGS[@]}"
+BOOTSTRAP_STATUS=0
+"$SRC/bootstrap.sh" "${BOOTSTRAP_ARGS[@]}" || BOOTSTRAP_STATUS=$?
 
 # ---------------------------------------------------------------- 2. the /park skill
 
@@ -153,3 +157,7 @@ else
   echo "done. next: write a tracker for the epic you are starting"
   echo "  cp $DIR/templates/tracker.md $DIR/trackers/<epic>.md"
 fi
+if [ "$BOOTSTRAP_STATUS" -ne 0 ]; then
+  echo "(bootstrap reported validation problems above; the install itself is complete)"
+fi
+exit "$BOOTSTRAP_STATUS"
